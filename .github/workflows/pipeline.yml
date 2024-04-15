@@ -93,45 +93,44 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
-      - name: Checkout the target GitOps repository
+      - name: Checkout GitOps repository
         uses: actions/checkout@v4
         with:
-          repository: 'YoelArcos/SpringBoot_ArgoCD'
+          repository: ${{ github.actor }}/ArgoCD_GitOps
           token: ${{ secrets.REPOSITORY_ACCESS_TOKEN }}
-          ref: 'refs/heads/main' # Stellen Sie sicher, dass Sie auf den richtigen Branch im Zielrepository abzielen
+          ref: 'refs/heads/main'
 
       - name: Update image tag with version from staging in production values.yml
         run: |
           version=$(grep 'tag:' values_staging.yml | awk '{print $2}')
           sed -i "s/tag: .*/tag: $version/" values_production.yml
 
-      - name: Checkout new branch for Pull Request in the target repository
+      - name: Checkout new branch for Pull Request
         run: |
           git checkout -b update-production-${version}
+    
 
-
-      - name: Commit changes to new branch in the target repository
+      - name: Commit changes to new branch
         run: |
-          git config --global user.email "github-actions@github.com"
-          git config --global user.name "github-actions"
-          git add values_production.yml
-          git commit --allow-empty -m "Deploy $version to production"
+         git config --global user.email "github-actions@github.com"
+         git config --global user.name "github-actions"
+         git add values_production.yml
+         git commit --allow-empty -m "Deploy $version to production"
+    
 
-
-      - name: Push changes to new branch in the target repository
+      - name: Push changes to new branch
         run: |
           git push --set-upstream origin update-production-${version}
+    
 
-
-      - name: Create Pull Request in the target repository
+      - name: Create Pull Request
         uses: repo-sync/pull-request@v2
         with:
           github_token: ${{ secrets.REPOSITORY_ACCESS_TOKEN }}
           pr_title: "Deploy to production: $version"
           pr_body: "Deployment of image with tag $version to production."
-          destination_branch: "main" # Das ist der Branch im Zielrepository, zu dem der PR gemacht wird
-          source_branch: "update-production-${version}" # Das ist der neue Branch im Zielrepository
-
+          destination_branch: "main"
+          source_branch: "update-production-${version}"
 
   system-tests:
     runs-on: ubuntu-latest
