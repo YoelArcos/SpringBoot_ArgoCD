@@ -144,6 +144,12 @@ jobs:
         with:
           node-version: '14'
 
+      - name: Set up Node.js environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'  # Aktualisiere auf eine unterstützte Version, z.B. 16
+
+
       - name: Install Newman
         run: npm install -g newman
 
